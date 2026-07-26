@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>產品定位 | UptimeIQ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#10141a; --surface:#1a2028; --line:#2a323d;
+    --text:#e7ebf0; --text-dim:#8b96a5; --accent:#2dd4bf;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; }
+  header { padding:28px 40px 20px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:baseline; }
+  .wordmark { font-family:'IBM Plex Mono',monospace; font-size:20px; font-weight:600; }
+  .wordmark span { color:var(--accent); }
+  .subtitle { font-size:13px; color:var(--text-dim); margin-top:4px; }
+  .topnav { display:flex; align-items:center; gap:20px; font-size:13px; }
+  .topnav a { color:var(--text-dim); text-decoration:none; }
+  .topnav a.active { color:var(--accent); }
+  .topnav a:hover { color:var(--text); }
+  #userTag { color:var(--text-dim); font-family:'IBM Plex Mono',monospace; font-size:12px; border-left:1px solid var(--line); padding-left:20px; }
+  main { max-width:820px; margin:0 auto; padding:60px 40px; }
+  .hero-tag { font-family:'IBM Plex Mono',monospace; color:var(--accent); font-size:13px; margin-bottom:14px; }
+  h1 { font-size:32px; line-height:1.3; margin:0 0 18px; }
+  .lead { font-size:15px; color:var(--text-dim); line-height:1.8; margin-bottom:40px; }
+  section { margin-bottom:36px; }
+  section h2 { font-size:16px; margin-bottom:14px; border-left:3px solid var(--accent); padding-left:12px; }
+  .module-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .module-card { background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:16px 18px; }
+  .module-card .tag { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--accent); margin-bottom:6px; }
+  .module-card p { font-size:13px; color:var(--text-dim); margin:4px 0 0; line-height:1.5; }
+  .roadmap-list { list-style:none; padding:0; margin:0; }
+  .roadmap-list li {
+    padding:10px 0; border-bottom:1px solid var(--line); font-size:13px; color:var(--text-dim);
+    display:flex; justify-content:space-between;
+  }
+  .roadmap-list li:last-child { border-bottom:none; }
+  .roadmap-list .status { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--text-dim); }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="wordmark">Uptime<span>IQ</span></div>
+    <div class="subtitle">預防性保養與妥善率智慧平台</div>
+  </div>
+  <nav class="topnav">
+    <a href="machines.html">設備清單</a>
+    <a href="maintenance-form.html">填寫紀錄</a>
+    <a href="pm-schedule.html">保養排程</a>
+    <a href="analytics.html">績效分析</a>
+    <a href="product-overview.html" class="active">產品定位</a>
+    <span id="userTag"></span>
+    <a href="#" id="logoutLink">登出</a>
+  </nav>
+</header>
+
+<main>
+  <div class="hero-tag">PRODUCT OVERVIEW</div>
+  <h1>一套以資料驅動保養排程與設備績效分析為核心的智慧平台，協助製造業降低非預期停機、提升設備妥善率。</h1>
+  <p class="lead">
+    UptimeIQ 不是為單一工廠打造的內部工具，而是以產品經理／創業者視角設計，可販售給任何製造業客戶的保養管理產品。
+    設備類別可自由擴充（產線機台、空調、堆高機、發電機…），核心邏輯全部由業界公開標準公式支撐，而非個人經驗判斷。
+  </p>
+
+  <section>
+    <h2>本階段核心模組（MVP）</h2>
+    <div class="module-grid">
+      <div class="module-card">
+        <div class="tag">BRD-01</div>
+        資料驅動保養排程
+        <p>依運轉狀況與歷史故障間隔（MTBF）動態計算下次保養時間，而非固定週期。</p>
+      </div>
+      <div class="module-card">
+        <div class="tag">BRD-02</div>
+        設備績效與導入效益分析
+        <p>MTBF／MTTR／Availability／PM Compliance＋停機成本試算，換算成金額佐證投資報酬。</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Roadmap（明確排除，列為未來規劃）</h2>
+    <ul class="roadmap-list">
+      <li>Asset 全生命週期管理（採購～報廢）<span class="status">未開發</span></li>
+      <li>完整工單派工／簽核流程<span class="status">未開發</span></li>
+      <li>巡檢管理（Inspection）<span class="status">未開發</span></li>
+      <li>備品庫存管理（Spare Parts Inventory）<span class="status">未開發</span></li>
+      <li>預測性維護（IoT / Sensor-based Predictive Maintenance）<span class="status">未開發</span></li>
+      <li>完整 RBAC 權限矩陣<span class="status">未開發</span></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>為什麼不做「全生命週期管理平台」</h2>
+    <p style="font-size:13px; color:var(--text-dim); line-height:1.8;">
+      規劃初期曾考慮將產品定位拉高至「Equipment Lifecycle Management Platform（設備生命週期管理平台）」，涵蓋採購、保養、維修、備品、報廢等完整流程。
+      但基於本階段開發時間與資料完整度的限制，選擇先聚焦在「資料驅動保養排程」與「設備績效分析」這兩個最能被資料驗證、邏輯最完整的模組，
+      其餘模組明確列為 Roadmap。這個取捨本身，也是本專案想呈現的核心能力之一：與其做十個模組但每個都淺，不如把兩個模組做深、做到邏輯經得起檢驗。
+    </p>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabaseClient.js"></script>
+<script>
+  async function requireLogin() {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) { window.location.href = 'index.html'; return null; }
+    return session;
+  }
+  document.getElementById('logoutLink').addEventListener('click', async (e) => {
+    e.preventDefault();
+    await supabaseClient.auth.signOut();
+    sessionStorage.clear();
+    window.location.href = 'index.html';
+  });
+  (async () => {
+    const session = await requireLogin();
+    if (!session) return;
+    document.getElementById('userTag').textContent = sessionStorage.getItem('uptimeiq_name') || session.user.email;
+  })();
+</script>
+
+</body>
+</html>

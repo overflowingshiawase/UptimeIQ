@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>登入 | UptimeIQ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #10141a;
+    --surface: #1a2028;
+    --line: #2a323d;
+    --text: #e7ebf0;
+    --text-dim: #8b96a5;
+    --accent: #2dd4bf;
+    --crit: #ef5350;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .card {
+    width: 340px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 32px;
+  }
+  .wordmark {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .wordmark span { color: var(--accent); }
+  .subtitle {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 28px;
+  }
+  label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+  input {
+    width: 100%;
+    background: #12161c;
+    border: 1px solid var(--line);
+    color: var(--text);
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    margin-bottom: 18px;
+  }
+  input:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+  button {
+    width: 100%;
+    background: var(--accent);
+    color: #0a1210;
+    border: none;
+    padding: 11px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button:disabled { opacity: 0.6; cursor: not-allowed; }
+  .msg {
+    margin-top: 14px;
+    font-size: 13px;
+    text-align: center;
+  }
+  .msg.error { color: var(--crit); }
+  .msg.info { color: var(--text-dim); }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="wordmark">Uptime<span>IQ</span></div>
+  <div class="subtitle">預防性保養與妥善率智慧平台</div>
+
+  <form id="loginForm">
+    <label for="email">帳號（Email）</label>
+    <input type="email" id="email" required autocomplete="username">
+
+    <label for="password">密碼</label>
+    <input type="password" id="password" required autocomplete="current-password">
+
+    <button type="submit" id="submitBtn">登入</button>
+  </form>
+
+  <div class="msg" id="msg"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabaseClient.js"></script>
+<script>
+  const form = document.getElementById('loginForm');
+  const msg = document.getElementById('msg');
+  const submitBtn = document.getElementById('submitBtn');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    submitBtn.disabled = true;
+    msg.textContent = '登入中…';
+    msg.className = 'msg info';
+
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      msg.textContent = '登入失敗：' + error.message;
+      msg.className = 'msg error';
+      submitBtn.disabled = false;
+      return;
+    }
+
+    // 登入成功後，查詢這個使用者的角色，存起來給其他頁面判斷權限用
+    const { data: profile, error: profileError } = await supabaseClient
+      .from('user_profiles')
+      .select('role, display_name')
+      .eq('id', data.user.id)
+      .single();
+
+    if (profileError) {
+      msg.textContent = '登入成功，但讀取權限資料失敗：' + profileError.message;
+      msg.className = 'msg error';
+      submitBtn.disabled = false;
+      return;
+    }
+
+    sessionStorage.setItem('uptimeiq_role', profile.role);
+    sessionStorage.setItem('uptimeiq_name', profile.display_name ?? '');
+
+    // 全部角色先統一導向設備清單頁，之後可依角色導向不同首頁
+    window.location.href = 'machines.html';
+  });
+</script>
+
+</body>
+</html>
