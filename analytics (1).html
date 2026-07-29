@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>績效分析 | UptimeIQ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#10141a; --surface:#1a2028; --surface-2:#212934; --line:#2a323d;
+    --text:#e7ebf0; --text-dim:#8b96a5; --accent:#2dd4bf; --warn:#f5a623; --crit:#ef5350;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; }
+  header { padding:28px 40px 20px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:baseline; }
+  .wordmark { font-family:'IBM Plex Mono',monospace; font-size:20px; font-weight:600; }
+  .wordmark span { color:var(--accent); }
+  .subtitle { font-size:13px; color:var(--text-dim); margin-top:4px; }
+  .topnav { display:flex; align-items:center; gap:20px; font-size:13px; }
+  .topnav a { color:var(--text-dim); text-decoration:none; }
+  .topnav a.active { color:var(--accent); }
+  .topnav a:hover { color:var(--text); }
+  #userTag { color:var(--text-dim); font-family:'IBM Plex Mono',monospace; font-size:12px; border-left:1px solid var(--line); padding-left:20px; }
+  main { padding:32px 40px; }
+  .kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:28px; }
+  .kpi-card { background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:20px; }
+  .kpi-label { font-size:11px; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.05em; margin-bottom:8px; }
+  .kpi-value { font-family:'IBM Plex Mono',monospace; font-size:28px; font-weight:600; }
+  .kpi-value.accent { color:var(--accent); }
+  .kpi-value.warn { color:var(--warn); }
+  section { background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:24px; margin-bottom:20px; }
+  section h2 { font-size:15px; margin:0 0 6px; }
+  section .section-note { font-size:12px; color:var(--text-dim); margin-bottom:18px; line-height:1.6; }
+  table { width:100%; border-collapse:collapse; }
+  th { text-align:left; font-size:11px; text-transform:uppercase; color:var(--text-dim); padding:10px; border-bottom:1px solid var(--line); font-weight:500; }
+  td { padding:12px 10px; border-bottom:1px solid var(--line); font-size:13px; }
+  tr.machine-row { cursor:pointer; }
+  tr.machine-row:hover td { background:var(--surface-2); }
+  tr.machine-row .expand-icon { color:var(--text-dim); margin-right:6px; font-size:11px; }
+  .bar-track { background:var(--surface-2); border-radius:4px; height:8px; width:160px; overflow:hidden; }
+  .bar-fill { background:var(--accent); height:100%; }
+  .bar-fill.low { background:var(--warn); }
+  .roi-inputs { display:flex; gap:20px; align-items:flex-end; margin-bottom:16px; }
+  .roi-inputs label { display:block; font-size:12px; color:var(--text-dim); margin-bottom:6px; }
+  .roi-inputs input { background:#12161c; border:1px solid var(--line); color:var(--text); padding:8px 12px; border-radius:6px; width:160px; }
+  .roi-result { font-family:'IBM Plex Mono',monospace; font-size:24px; color:var(--crit); }
+  .roi-result span { font-size:13px; color:var(--text-dim); display:block; margin-top:4px; }
+  .locked { text-align:center; padding:80px 0; color:var(--text-dim); }
+
+  .toggle-row { display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+  .switch { position:relative; width:40px; height:22px; }
+  .switch input { opacity:0; width:0; height:0; }
+  .slider { position:absolute; inset:0; background:var(--surface-2); border:1px solid var(--line); border-radius:22px; cursor:pointer; transition:0.2s; }
+  .slider::before { content:''; position:absolute; width:16px; height:16px; left:2px; top:2px; background:var(--text-dim); border-radius:50%; transition:0.2s; }
+  input:checked + .slider { border-color:var(--accent); }
+  input:checked + .slider::before { transform:translateX(18px); background:var(--accent); }
+  .toggle-label { font-size:13px; color:var(--text-dim); }
+
+  .scenario-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+  .scenario-card { background:var(--surface-2); border:1px solid var(--line); border-radius:8px; padding:16px 18px; }
+  .scenario-card .label { font-size:11px; text-transform:uppercase; color:var(--text-dim); margin-bottom:8px; }
+  .scenario-card .value { font-family:'IBM Plex Mono',monospace; font-size:22px; }
+  .scenario-card.before .value { color:var(--warn); }
+  .scenario-card.after .value { color:var(--accent); }
+  .methodology {
+    font-size:12px; color:var(--text-dim); background:#12161c; border:1px solid var(--line);
+    border-radius:6px; padding:12px 14px; line-height:1.7; margin-top:14px;
+  }
+  .methodology b { color:var(--text); }
+
+  .timeline-row td { background:#12161c; padding:16px 20px; }
+  .timeline { list-style:none; margin:0; padding:0; border-left:2px solid var(--line); }
+  .timeline li { position:relative; padding:8px 0 8px 18px; font-size:12px; }
+  .timeline li::before {
+    content:''; position:absolute; left:-6px; top:14px; width:9px; height:9px;
+    border-radius:50%; background:var(--text-dim); border:2px solid var(--bg);
+  }
+  .timeline li.cm::before { background:var(--warn); }
+  .timeline li.pm::before { background:var(--accent); }
+  .timeline .t-date { font-family:'IBM Plex Mono',monospace; color:var(--text-dim); margin-right:10px; }
+  .timeline .t-fault { color:var(--warn); }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="wordmark">Uptime<span>IQ</span></div>
+    <div class="subtitle">預防性保養與妥善率智慧平台</div>
+  </div>
+  <nav class="topnav">
+    <a href="machines.html">設備清單</a>
+    <a href="maintenance-form.html">填寫紀錄</a>
+    <a href="pm-schedule.html">保養排程</a>
+    <a href="analytics.html" class="active">績效分析</a>
+    <a href="product-overview.html">產品定位</a>
+    <span id="userTag"></span>
+    <a href="#" id="logoutLink">登出</a>
+  </nav>
+</header>
+
+<main id="mainContent">
+  <div class="locked" id="loadingMsg">載入中…</div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabaseClient.js"></script>
+<script>
+  // 系統資料監控起始日：導入本系統前的維護紀錄未電子化留存，
+  // KPI（尤其PM Compliance）採計基準以此為起點，而非設備原始安裝日期。
+  const SYSTEM_MONITORING_START = new Date('2025-06-01');
+
+  async function requireLogin() {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) { window.location.href = 'index.html'; return null; }
+    return session;
+  }
+
+  document.getElementById('logoutLink').addEventListener('click', async (e) => {
+    e.preventDefault();
+    await supabaseClient.auth.signOut();
+    sessionStorage.clear();
+    window.location.href = 'index.html';
+  });
+
+  let byMachineGlobal = {};
+  let machinesGlobal = [];
+
+  async function loadAnalytics() {
+    const [{ data: machines }, { data: records }] = await Promise.all([
+      supabaseClient.from('machine_master').select('id, machine_name, install_date, base_pm_cycle_days'),
+      supabaseClient.from('maintenance_record').select('machine_id, record_type, start_time, downtime_hours, notes, fault_type:fault_type_id(fault_name, severity_level)')
+    ]);
+
+    const byMachine = {};
+    records.forEach(r => { (byMachine[r.machine_id] ||= []).push(r); });
+    byMachineGlobal = byMachine;
+    machinesGlobal = machines;
+
+    // 計算 KPI 窗口起點：max(系統監控起始日, 近12個月)
+    const oneYearAgo = new Date(); oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+    const windowStart = oneYearAgo > SYSTEM_MONITORING_START ? oneYearAgo : SYSTEM_MONITORING_START;
+
+    const kpis = machines.map(m => {
+      const recs = byMachine[m.id] || [];
+      const cm = recs.filter(r => r.record_type === 'CM');
+      const pm = recs.filter(r => r.record_type === 'PM');
+
+      const faultCount = cm.length;
+      const totalDowntime = cm.reduce((s, r) => s + (Number(r.downtime_hours) || 0), 0);
+      const mttr = faultCount ? totalDowntime / faultCount : null;
+
+      const sorted = cm.map(r => new Date(r.start_time)).sort((a,b) => a - b);
+      const mtbfDays = sorted.length >= 2
+        ? (sorted[sorted.length - 1] - sorted[0]) / (1000 * 60 * 60 * 24) / (sorted.length - 1)
+        : null;
+      const mtbfHours = mtbfDays !== null ? mtbfDays * 24 : null;
+
+      const availability = (mtbfHours !== null && mttr !== null)
+        ? mtbfHours / (mtbfHours + mttr) : null;
+
+      // PM Compliance：分母窗口 = max(系統監控起始日, 近12個月) 到現在
+      let pmCompliance = null;
+      if (m.base_pm_cycle_days) {
+        const windowDays = (new Date() - windowStart) / (1000*60*60*24);
+        const expected = Math.max(1, Math.floor(windowDays / m.base_pm_cycle_days));
+        const actualInWindow = pm.filter(r => new Date(r.start_time) >= windowStart).length;
+        pmCompliance = Math.min(1, actualInWindow / expected);
+      }
+
+      // 情境模擬：第3次故障起視為「若早導入本系統，理論上可提前保養預防」
+      const preventableCount = Math.max(0, faultCount - 2);
+      const avoidedDowntime = mttr !== null ? preventableCount * mttr : 0;
+
+      return { id: m.id, name: m.machine_name, faultCount, totalDowntime, mttr, mtbfDays, availability, pmCompliance, preventableCount, avoidedDowntime };
+    });
+
+    return { kpis, windowStart };
+  }
+
+  function renderDashboard(kpis, windowStart) {
+    const totalFaults = kpis.reduce((s,k) => s + k.faultCount, 0);
+    const totalDowntime = kpis.reduce((s,k) => s + k.totalDowntime, 0);
+    const avgAvailability = kpis.filter(k=>k.availability!==null);
+    const avgAvailabilityVal = avgAvailability.length
+      ? avgAvailability.reduce((s,k)=>s+k.availability,0) / avgAvailability.length : null;
+    const maxMtbf = Math.max(...kpis.map(k => k.mtbfDays || 0), 1);
+    const totalPreventable = kpis.reduce((s,k) => s + k.preventableCount, 0);
+    const totalAvoidedDowntime = kpis.reduce((s,k) => s + k.avoidedDowntime, 0);
+
+    const main = document.getElementById('mainContent');
+    main.innerHTML = `
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">全廠故障次數</div>
+          <div class="kpi-value">${totalFaults}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">總停機時數</div>
+          <div class="kpi-value warn">${totalDowntime.toFixed(1)} 小時</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">平均妥善率 (Availability)</div>
+          <div class="kpi-value accent">${avgAvailabilityVal !== null ? (avgAvailabilityVal*100).toFixed(1)+'%' : '—'}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">設備台數</div>
+          <div class="kpi-value">${kpis.length}</div>
+        </div>
+      </div>
+
+      <section>
+        <h2>各設備 MTBF 對比（平均故障間隔，天數越長越穩定）</h2>
+        <div class="section-note">點擊設備名稱可展開該設備的完整故障／保養時間軸</div>
+        <table>
+          <thead><tr><th>設備</th><th>MTBF</th><th style="width:180px">相對比較</th><th>MTTR</th><th>妥善率</th><th>PM達成率</th></tr></thead>
+          <tbody>
+            ${kpis.map(k => `
+              <tr class="machine-row" data-machine-id="${k.id}">
+                <td><span class="expand-icon">▸</span>${k.name}</td>
+                <td>${k.mtbfDays !== null ? k.mtbfDays.toFixed(1)+' 天' : '資料不足'}</td>
+                <td>
+                  <div class="bar-track">
+                    <div class="bar-fill ${(k.mtbfDays||0) < maxMtbf*0.4 ? 'low' : ''}" style="width:${((k.mtbfDays||0)/maxMtbf*100).toFixed(0)}%"></div>
+                  </div>
+                </td>
+                <td>${k.mttr !== null ? k.mttr.toFixed(1)+' 小時' : '—'}</td>
+                <td>${k.availability !== null ? (k.availability*100).toFixed(1)+'%' : '—'}</td>
+                <td>${k.pmCompliance !== null ? (k.pmCompliance*100).toFixed(0)+'%' : '—'}</td>
+              </tr>
+              <tr class="timeline-row hidden" data-timeline-for="${k.id}">
+                <td colspan="6"><ul class="timeline"></ul></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        <div class="methodology">
+          <b>PM Compliance 計算說明：</b>分母採計窗口為「系統資料監控起始日（${SYSTEM_MONITORING_START.toLocaleDateString('zh-TW')}）」與「近12個月」兩者中較晚者（目前窗口起點：${windowStart.toLocaleDateString('zh-TW')}），而非設備原始安裝日期——因為導入本系統前的維護紀錄並未電子化留存，這是CMMS系統上線初期普遍會面臨的資料起點問題。
+        </div>
+      </section>
+
+      <section>
+        <div class="toggle-row">
+          <label class="switch">
+            <input type="checkbox" id="scenarioToggle">
+            <span class="slider"></span>
+          </label>
+          <span class="toggle-label">顯示情境模擬：導入前 vs 導入後</span>
+        </div>
+        <div id="scenarioContent" class="hidden">
+          <h2>情境模擬：固定週期保養 vs 動態保養排程</h2>
+          <div class="scenario-grid">
+            <div class="scenario-card before">
+              <div class="label">現況（固定週期保養，本系統歷史資料所反映的樣態）</div>
+              <div class="value">${totalFaults} 次故障 / ${totalDowntime.toFixed(1)} 小時停機</div>
+            </div>
+            <div class="scenario-card after">
+              <div class="label">若及早導入動態保養排程（估算）</div>
+              <div class="value">可避免約 ${totalPreventable} 次故障 / ${totalAvoidedDowntime.toFixed(1)} 小時停機</div>
+            </div>
+          </div>
+          <div class="methodology">
+            <b>方法論（非引用外部產業數字，完全基於本系統資料庫的邏輯推算）：</b>系統至少需累積2次故障紀錄才能算出MTBF並產生保養建議，因此每台設備「第3次故障起」的每一次故障，理論上都是「若已依本系統建議提前保養，有機會避免」的故障。可避免故障數 = max(0, 故障次數 − 2)；可避免停機時數 = 可避免故障數 × 該設備MTTR。此為假設性推算，用於呈現導入方向與潛在效益，非實際導入後的結果。
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>停機成本試算（導入效益 / ROI）</h2>
+        <div class="roi-inputs">
+          <div>
+            <label for="hourlyRate">每小時停機成本（元）</label>
+            <input type="number" id="hourlyRate" value="5000" step="500">
+          </div>
+        </div>
+        <div class="roi-result" id="roiResult">
+          —
+          <span>依全廠總停機時數 × 每小時停機成本估算</span>
+        </div>
+        <div class="roi-result" id="roiAvoidedResult" style="color:var(--accent); font-size:18px; margin-top:10px;">
+          —
+          <span>若及早導入動態保養排程，估算可避免的停機成本（見上方情境模擬）</span>
+        </div>
+      </section>
+    `;
+
+    const updateRoi = () => {
+      const rate = Number(document.getElementById('hourlyRate').value) || 0;
+      document.getElementById('roiResult').innerHTML =
+        `NT$ ${(totalDowntime * rate).toLocaleString()} <span>依全廠總停機時數 × 每小時停機成本估算</span>`;
+      document.getElementById('roiAvoidedResult').innerHTML =
+        `NT$ ${(totalAvoidedDowntime * rate).toLocaleString()} <span>若及早導入動態保養排程，估算可避免的停機成本（見上方情境模擬）</span>`;
+    };
+    document.getElementById('hourlyRate').addEventListener('input', updateRoi);
+    updateRoi();
+
+    document.getElementById('scenarioToggle').addEventListener('change', (e) => {
+      document.getElementById('scenarioContent').classList.toggle('hidden', !e.target.checked);
+    });
+
+    // 單一設備深潛：點擊列展開時間軸
+    document.querySelectorAll('.machine-row').forEach(row => {
+      row.addEventListener('click', () => {
+        const id = row.dataset.machineId;
+        const timelineRow = document.querySelector(`.timeline-row[data-timeline-for="${id}"]`);
+        const icon = row.querySelector('.expand-icon');
+        const isHidden = timelineRow.classList.contains('hidden');
+
+        if (isHidden) {
+          const recs = (byMachineGlobal[id] || []).slice().sort((a,b) => new Date(b.start_time) - new Date(a.start_time));
+          const ul = timelineRow.querySelector('.timeline');
+          ul.innerHTML = recs.length ? recs.map(r => `
+            <li class="${r.record_type === 'CM' ? 'cm' : 'pm'}">
+              <span class="t-date">${new Date(r.start_time).toLocaleDateString('zh-TW')}</span>
+              <span class="tag ${r.record_type === 'CM' ? 'cm' : 'pm'}">${r.record_type}</span>
+              ${r.fault_type ? `<span class="t-fault"> ${r.fault_type.fault_name}（${r.fault_type.severity_level}）</span>` : ''}
+              ${r.downtime_hours ? ` · 停機 ${r.downtime_hours} 小時` : ''}
+              ${r.notes ? ` · ${r.notes}` : ''}
+            </li>
+          `).join('') : `<li>此設備尚無紀錄</li>`;
+        }
+        timelineRow.classList.toggle('hidden');
+        icon.textContent = isHidden ? '▾' : '▸';
+      });
+    });
+  }
+
+  (async () => {
+    const session = await requireLogin();
+    if (!session) return;
+    document.getElementById('userTag').textContent = sessionStorage.getItem('uptimeiq_name') || session.user.email;
+
+    const { data: profile } = await supabaseClient.from('user_profiles').select('role').eq('id', session.user.id).single();
+    if (profile?.role !== 'admin') {
+      document.getElementById('mainContent').innerHTML = `<div class="locked">此頁僅限管理者（admin）查看</div>`;
+      return;
+    }
+
+    const { kpis, windowStart } = await loadAnalytics();
+    renderDashboard(kpis, windowStart);
+  })();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>填寫維修紀錄 | UptimeIQ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #10141a;
+    --surface: #1a2028;
+    --surface-2: #212934;
+    --line: #2a323d;
+    --text: #e7ebf0;
+    --text-dim: #8b96a5;
+    --accent: #2dd4bf;
+    --warn: #f5a623;
+    --crit: #ef5350;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+  }
+  header {
+    padding: 28px 40px 20px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .wordmark {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .wordmark span { color: var(--accent); }
+  .subtitle { font-size: 13px; color: var(--text-dim); margin-top: 4px; }
+  .topnav { display: flex; align-items: center; gap: 20px; font-size: 13px; }
+  .topnav a { color: var(--text-dim); text-decoration: none; }
+  .topnav a.active { color: var(--accent); }
+  .topnav a:hover { color: var(--text); }
+  #userTag {
+    color: var(--text-dim);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    border-left: 1px solid var(--line);
+    padding-left: 20px;
+  }
+  main { padding: 32px 40px; display: flex; gap: 24px; align-items: flex-start; }
+  .form-card {
+    width: 380px;
+    flex-shrink: 0;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 28px;
+  }
+  .form-card h2 { font-size: 16px; margin: 0 0 20px; }
+  label { display: block; font-size: 12px; color: var(--text-dim); margin-bottom: 6px; }
+  select, input, textarea {
+    width: 100%;
+    background: #12161c;
+    border: 1px solid var(--line);
+    color: var(--text);
+    padding: 9px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    margin-bottom: 16px;
+    font-family: 'Inter', sans-serif;
+  }
+  .type-toggle { display: flex; gap: 8px; margin-bottom: 16px; }
+  .type-toggle button {
+    flex: 1;
+    padding: 9px;
+    border-radius: 6px;
+    border: 1px solid var(--line);
+    background: #12161c;
+    color: var(--text-dim);
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .type-toggle button.selected {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(45,212,191,0.08);
+  }
+  .submit-btn {
+    width: 100%;
+    background: var(--accent);
+    color: #0a1210;
+    border: none;
+    padding: 11px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .msg { margin-top: 14px; font-size: 13px; text-align: center; }
+  .msg.error { color: var(--crit); }
+  .msg.success { color: var(--accent); }
+
+  .history-panel {
+    flex: 1;
+    display: flex;
+    gap: 0;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+    min-height: 480px;
+  }
+  .tree-col {
+    width: 190px;
+    flex-shrink: 0;
+    border-right: 1px solid var(--line);
+    padding: 20px 0;
+  }
+  .tree-col h3 {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+    padding: 0 18px 10px;
+    margin: 0;
+  }
+  .tree-year { margin-bottom: 4px; }
+  .tree-year-label {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 18px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--text);
+  }
+  .tree-year-label:hover { background: var(--surface-2); }
+  .tree-year-label.active { color: var(--accent); }
+  .tree-year-label .count { color: var(--text-dim); font-size: 11px; }
+  .tree-months { display: none; }
+  .tree-months.open { display: block; }
+  .tree-month {
+    padding: 6px 18px 6px 34px;
+    font-size: 12px;
+    color: var(--text-dim);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+  }
+  .tree-month:hover { color: var(--text); background: var(--surface-2); }
+  .tree-month.active { color: var(--accent); }
+  .tree-toggle { font-size: 10px; color: var(--text-dim); margin-right: 6px; }
+
+  .table-col { flex: 1; padding: 20px 24px; overflow-x: auto; }
+  .table-col-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 14px;
+  }
+  .table-col-header h2 { font-size: 15px; margin: 0; }
+  .table-col-header .range-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--line);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  td { padding: 10px; border-bottom: 1px solid var(--line); font-size: 13px; white-space: nowrap; }
+  .tag { font-size: 11px; padding: 2px 8px; border-radius: 20px; border: 1px solid var(--line); }
+  .tag.cm { color: var(--warn); border-color: var(--warn); }
+  .tag.pm { color: var(--accent); border-color: var(--accent); }
+  .empty { color: var(--text-dim); font-size: 13px; padding: 20px 0; text-align: center; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="wordmark">Uptime<span>IQ</span></div>
+    <div class="subtitle">預防性保養與妥善率智慧平台</div>
+  </div>
+  <nav class="topnav">
+    <a href="machines.html">設備清單</a>
+    <a href="maintenance-form.html" class="active">填寫紀錄</a>
+    <a href="pm-schedule.html">保養排程</a>
+    <a href="analytics.html" id="navAnalytics">績效分析</a>
+    <a href="product-overview.html">產品定位</a>
+    <span id="userTag"></span>
+    <a href="#" id="logoutLink">登出</a>
+  </nav>
+</header>
+
+<main>
+  <div class="form-card">
+    <h2>新增維修 / 保養紀錄</h2>
+    <form id="recordForm">
+      <label>紀錄類型</label>
+      <div class="type-toggle">
+        <button type="button" data-type="CM" class="selected">故障維修 CM</button>
+        <button type="button" data-type="PM">預防保養 PM</button>
+      </div>
+      <input type="hidden" id="recordType" value="CM">
+
+      <label for="machineSelect">設備</label>
+      <select id="machineSelect" required></select>
+
+      <div id="faultTypeGroup">
+        <label for="faultTypeSelect">故障類型</label>
+        <select id="faultTypeSelect"></select>
+      </div>
+
+      <label for="startTime">開始時間</label>
+      <input type="datetime-local" id="startTime" required>
+
+      <label for="endTime">結束時間</label>
+      <input type="datetime-local" id="endTime">
+
+      <label for="downtimeHours">停機時數（小時）</label>
+      <input type="number" id="downtimeHours" step="0.5" min="0">
+
+      <label for="notes">備註</label>
+      <textarea id="notes" rows="3"></textarea>
+
+      <button type="submit" class="submit-btn" id="submitBtn">送出紀錄</button>
+      <div class="msg" id="msg"></div>
+    </form>
+  </div>
+
+  <div class="history-panel">
+    <div class="tree-col">
+      <h3>歷史紀錄瀏覽</h3>
+      <div id="yearTree"><div class="empty">載入中…</div></div>
+    </div>
+    <div class="table-col">
+      <div class="table-col-header">
+        <h2>紀錄清單</h2>
+        <span class="range-tag" id="rangeTag">全部</span>
+      </div>
+      <table>
+        <thead>
+          <tr><th>設備</th><th>類型</th><th>故障類型</th><th>時間</th><th>停機時數</th><th>備註</th></tr>
+        </thead>
+        <tbody id="recentBody">
+          <tr><td colspan="6" class="empty">載入中…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabaseClient.js"></script>
+<script>
+  let currentUserId = null;
+  let allRecords = [];
+
+  async function requireLogin() {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) {
+      window.location.href = 'index.html';
+      return null;
+    }
+    return session;
+  }
+
+  document.getElementById('logoutLink').addEventListener('click', async (e) => {
+    e.preventDefault();
+    await supabaseClient.auth.signOut();
+    sessionStorage.clear();
+    window.location.href = 'index.html';
+  });
+
+  // 切換 CM / PM
+  document.querySelectorAll('.type-toggle button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.type-toggle button').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      const type = btn.dataset.type;
+      document.getElementById('recordType').value = type;
+      document.getElementById('faultTypeGroup').classList.toggle('hidden', type === 'PM');
+    });
+  });
+
+  async function loadMachineOptions() {
+    const { data, error } = await supabaseClient.from('machine_master').select('id, machine_name').order('machine_name');
+    const select = document.getElementById('machineSelect');
+    if (error) { select.innerHTML = `<option>讀取失敗</option>`; return; }
+    select.innerHTML = data.map(m => `<option value="${m.id}">${m.machine_name}</option>`).join('');
+  }
+
+  async function loadFaultTypeOptions() {
+    const { data, error } = await supabaseClient.from('fault_type').select('id, fault_name, severity_level').order('fault_name');
+    const select = document.getElementById('faultTypeSelect');
+    if (error) { select.innerHTML = `<option>讀取失敗</option>`; return; }
+    select.innerHTML = data.map(f => `<option value="${f.id}">${f.fault_name}（${f.severity_level}）</option>`).join('');
+  }
+
+  // 讀取全部歷史紀錄（不再限制8筆），供年份/月份樹狀瀏覽使用
+  async function loadAllRecords() {
+    const { data, error } = await supabaseClient
+      .from('maintenance_record')
+      .select('id, machine_id, record_type, start_time, end_time, downtime_hours, notes, machine_master(machine_name), fault_type:fault_type_id(fault_name, severity_level)')
+      .order('start_time', { ascending: false })
+      .limit(1000);
+
+    if (error) {
+      document.getElementById('yearTree').innerHTML = `<div class="empty">讀取失敗</div>`;
+      document.getElementById('recentBody').innerHTML = `<tr><td colspan="6" class="empty">讀取失敗：${error.message}</td></tr>`;
+      return;
+    }
+    allRecords = data;
+    buildTree(allRecords);
+    renderTable(allRecords, '全部');
+  }
+
+  function buildTree(records) {
+    const tree = {}; // { year: { count, months: { month: count } } }
+    records.forEach(r => {
+      const d = new Date(r.start_time);
+      const y = d.getFullYear();
+      const m = d.getMonth() + 1;
+      tree[y] = tree[y] || { count: 0, months: {} };
+      tree[y].count++;
+      tree[y].months[m] = (tree[y].months[m] || 0) + 1;
+    });
+
+    const years = Object.keys(tree).sort((a, b) => b - a);
+    const container = document.getElementById('yearTree');
+
+    if (!years.length) {
+      container.innerHTML = `<div class="empty">沒有歷史紀錄</div>`;
+      return;
+    }
+
+    container.innerHTML = years.map(y => `
+      <div class="tree-year" data-year="${y}">
+        <div class="tree-year-label" data-filter-year="${y}">
+          <span><span class="tree-toggle" data-toggle="${y}">▸</span>${y}</span>
+          <span class="count">${tree[y].count}</span>
+        </div>
+        <div class="tree-months" data-months="${y}">
+          ${Object.keys(tree[y].months).sort((a,b) => b - a).map(m => `
+            <div class="tree-month" data-filter-year="${y}" data-filter-month="${m}">
+              <span>${m}月</span><span class="count">${tree[y].months[m]}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `).join('');
+
+    // 綁定年份展開/收合 + 篩選
+    container.querySelectorAll('.tree-year-label').forEach(el => {
+      el.addEventListener('click', () => {
+        const year = el.dataset.filterYear;
+        // 展開/收合月份
+        const monthsDiv = container.querySelector(`.tree-months[data-months="${year}"]`);
+        monthsDiv.classList.toggle('open');
+        const toggleIcon = el.querySelector('.tree-toggle');
+        toggleIcon.textContent = monthsDiv.classList.contains('open') ? '▾' : '▸';
+
+        // 篩選整年
+        setActiveTreeNode(el);
+        const filtered = allRecords.filter(r => new Date(r.start_time).getFullYear() == year);
+        renderTable(filtered, `${year} 年（全年）`);
+      });
+    });
+
+    container.querySelectorAll('.tree-month').forEach(el => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const year = el.dataset.filterYear;
+        const month = el.dataset.filterMonth;
+        setActiveTreeNode(el);
+        const filtered = allRecords.filter(r => {
+          const d = new Date(r.start_time);
+          return d.getFullYear() == year && (d.getMonth() + 1) == month;
+        });
+        renderTable(filtered, `${year} 年 ${month} 月`);
+      });
+    });
+
+    // 預設展開並選取最新年份
+    const latestYear = years[0];
+    container.querySelector(`.tree-months[data-months="${latestYear}"]`).classList.add('open');
+    const latestLabel = container.querySelector(`.tree-year-label[data-filter-year="${latestYear}"]`);
+    latestLabel.querySelector('.tree-toggle').textContent = '▾';
+  }
+
+  function setActiveTreeNode(el) {
+    document.querySelectorAll('.tree-year-label, .tree-month').forEach(n => n.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  function renderTable(records, rangeLabel) {
+    document.getElementById('rangeTag').textContent = rangeLabel;
+    const tbody = document.getElementById('recentBody');
+    if (!records.length) {
+      tbody.innerHTML = `<tr><td colspan="6" class="empty">此範圍沒有紀錄</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = records.map(r => `
+      <tr>
+        <td>${r.machine_master?.machine_name ?? '—'}</td>
+        <td><span class="tag ${r.record_type === 'CM' ? 'cm' : 'pm'}">${r.record_type}</span></td>
+        <td>${r.fault_type ? r.fault_type.fault_name + '（' + r.fault_type.severity_level + '）' : '—'}</td>
+        <td>${new Date(r.start_time).toLocaleString('zh-TW')}${r.end_time ? ' ～ ' + new Date(r.end_time).toLocaleString('zh-TW', {hour:'2-digit',minute:'2-digit'}) : ''}</td>
+        <td>${r.downtime_hours ?? '—'}</td>
+        <td>${r.notes ?? '—'}</td>
+      </tr>
+    `).join('');
+  }
+
+  document.getElementById('recordForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submitBtn = document.getElementById('submitBtn');
+    const msg = document.getElementById('msg');
+    submitBtn.disabled = true;
+    msg.textContent = '送出中…';
+    msg.className = 'msg';
+
+    const recordType = document.getElementById('recordType').value;
+    const startVal = document.getElementById('startTime').value;
+    const endVal = document.getElementById('endTime').value;
+
+    const payload = {
+      record_type: recordType,
+      machine_id: document.getElementById('machineSelect').value,
+      start_time: startVal ? new Date(startVal).toISOString() : null,
+      end_time: endVal ? new Date(endVal).toISOString() : null,
+      downtime_hours: document.getElementById('downtimeHours').value || null,
+      notes: document.getElementById('notes').value || null,
+      technician_id: currentUserId,
+      fault_type_id: recordType === 'CM' ? document.getElementById('faultTypeSelect').value : null
+    };
+
+    const { error } = await supabaseClient.from('maintenance_record').insert(payload);
+
+    if (error) {
+      msg.textContent = '送出失敗：' + error.message;
+      msg.className = 'msg error';
+      submitBtn.disabled = false;
+      return;
+    }
+
+    msg.textContent = '紀錄已送出';
+    msg.className = 'msg success';
+    document.getElementById('recordForm').reset();
+    submitBtn.disabled = false;
+    loadAllRecords();
+  });
+
+  (async () => {
+    const session = await requireLogin();
+    if (!session) return;
+    currentUserId = session.user.id;
+    document.getElementById('userTag').textContent = sessionStorage.getItem('uptimeiq_name') || session.user.email;
+    if (sessionStorage.getItem('uptimeiq_role') !== 'admin') {
+      document.getElementById('navAnalytics').style.display = 'none';
+    }
+    await Promise.all([loadMachineOptions(), loadFaultTypeOptions(), loadAllRecords()]);
+  })();
+</script>
+
+</body>
+</html>
