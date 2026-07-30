@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>班別交接 | UptimeIQ</title>
+<style>
+  body { font-family: 'Inter', sans-serif; background: #10141a; color: #e7ebf0; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+  .card { width: 400px; background: #1a2028; border: 1px solid #2a323d; border-radius: 10px; padding: 32px; }
+  h2 { margin-top: 0; }
+  select, textarea, button { width: 100%; padding: 10px; margin-top: 6px; margin-bottom: 16px; border-radius: 6px; border: 1px solid #2a323d; background: #10141a; color: #e7ebf0; box-sizing: border-box; }
+  textarea { min-height: 100px; }
+  button { background: #2dd4bf; color: #10141a; font-weight: 600; border: none; cursor: pointer; }
+  button:disabled { opacity: 0.6; cursor: not-allowed; }
+  #result { margin-top: 12px; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h2>班別交接輸入</h2>
+  <label>機台</label>
+  <select id="machine">
+    <option value="1">壓合機-01</option>
+    <option value="2">空調主機-01</option>
+    <option value="3">堆高機-01</option>
+    <option value="4">CNC車床-01</option>
+    <option value="5">發電機-01</option>
+  </select>
+  <label>班別</label>
+  <select id="shiftType">
+    <option value="早班">早班</option>
+    <option value="中班">中班</option>
+    <option value="夜班">夜班</option>
+  </select>
+  <label>交接重點（簡短輸入即可）</label>
+  <textarea id="rawInput" placeholder="例如：機台正常，無異常，已完成保養檢查"></textarea>
+  <button id="submitBtn" onclick="submitHandover()">送出交接</button>
+  <div id="result"></div>
+</div>
+
+<script>
+async function submitHandover() {
+  const btn = document.getElementById('submitBtn');
+  const resultDiv = document.getElementById('result');
+  btn.disabled = true;
+  resultDiv.textContent = '送出中...';
+
+  const payload = {
+    machine_id: document.getElementById('machine').value,
+    shift_type: document.getElementById('shiftType').value,
+    raw_input: document.getElementById('rawInput').value
+  };
+
+  try {
+    const res = await fetch('https://overflowingshiawsae.app.n8n.cloud/webhook/shift-handover', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) {
+      resultDiv.textContent = '交接已送出，系統處理中';
+      document.getElementById('rawInput').value = '';
+    } else {
+      resultDiv.textContent = '送出失敗，請稍後再試';
+    }
+  } catch (err) {
+    resultDiv.textContent = '連線錯誤：' + err.message;
+  }
+  btn.disabled = false;
+}
+</script>
+</body>
+</html>
