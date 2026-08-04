@@ -5,7 +5,7 @@
 
 中小型製造業很多還在用紙本或LINE群組做設備保養判斷和班別交接，這些依賴的是老師傅的經驗和記憶，沒辦法規模化也沒辦法留下紀錄。我用自己在產線上驗證過的規則，加上n8n自動化和LLM輔助，做了一個輕量級工具，把這兩件事變成自動判斷、自動整理、有紀錄可查的流程。這不是要取代企業既有系統，是給還沒有預算導入完整CMMS的工廠一個補強層。
 
-**Demo網址**：`（部署到Netlify後，把網址貼在這裡）`
+**Demo網址**：`[https://uptimeiq-demo.netlify.app/index.html]([url](https://uptimeiq-demo.netlify.app/index.html))`
 
 ---
 
