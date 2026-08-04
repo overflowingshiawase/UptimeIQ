@@ -1,0 +1,255 @@
+{
+  "name": "UptimeIQ-AnomalyDetection",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -176,
+        0
+      ],
+      "id": "f63fde86-4eb3-46ff-b5b8-57ce66c7bcaa",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "anomaly_alert",
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        0
+      ],
+      "id": "6b6cf988-47bb-4e3e-abea-c04c9707479e",
+      "name": "Supabase",
+      "credentials": {
+        "supabaseApi": {
+          "id": "xxTYeRn7h2Q8rmq5",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const data = item.json;\n  const daysSincePM = data.days_since_last_pm || 0;\n  const historicalAvg = 30; // 假設平均保養週期30天，可依實際調整\n  const faultWeight = data.alert_type === '滴油異常' ? 0.3 : 0.2;\n\n  const riskScore = (0.7 * (daysSincePM / historicalAvg)) + faultWeight;\n\n  results.push({\n    json: {\n      ...data,\n      calculated_risk_score: Math.min(riskScore, 1).toFixed(2)\n    }\n  });\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        80,
+        0
+      ],
+      "id": "ff581d83-c5b2-4b30-bc3a-7405c8ad4491",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "2f33f5ad-4c88-465c-9040-6ad76f6826f1",
+              "leftValue": "={{ $json.calculated_risk_score }}",
+              "rightValue": 0.5,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "a0909c84-7497-4666-b3d9-011a4e647dc1",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3-flash-preview",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3-flash-preview"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=你是一位資深設備維運顧問。請根據以下資訊，用繁體中文寫一段簡短的白話診斷說明（100字以內），給工廠廠長看：\n\n機台：{{ $json.alert_type }}\n距上次保養天數：{{ $json.days_since_last_pm }}天\n計算出的風險分數：{{ $json.calculated_risk_score }}（0-1，越高越需注意）\n\n請注意：這個風險分數是根據保養間隔天數計算出來的規則性分數，不是AI預測。請你的說明語氣是「根據規則計算結果解釋為什麼要注意」，不要用「AI預測」、「AI判斷」這類會誤導的字眼。"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        336,
+        0
+      ],
+      "id": "cfbbfb9b-85eb-43ce-915f-dd8460f34806",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "fyVKm40wrlSbTGSt",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "anomaly_alert",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('If').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "notified"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        592,
+        0
+      ],
+      "id": "46f2d3c1-3803-42cd-a02b-0c875b149ac1",
+      "name": "Update a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "xxTYeRn7h2Q8rmq5",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://discord.com/api/webhooks/1531957000114536548/WX5IdzH_cRFwWpdJc2PFDtiF-ilFEA3G3blpj2bkeOcI4QOTmvzrcoSYoLVahfCAwMAA",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"content\": \"{{ $json.diagnosis_text }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        800,
+        0
+      ],
+      "id": "fe8c2b70-a15e-4ae9-8d3e-2b738e260741",
+      "name": "HTTP Request"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Update a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a row": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "1313c5a1-3574-407a-aac7-8522706f3a72",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2392386c7b756faa0aaff645c84f64e5b1ad0b72b120a9b7a51f707467fa9bb2"
+  },
+  "nodeGroups": [],
+  "id": "Sm0FKEjIbgH6NouE",
+  "tags": []
+}

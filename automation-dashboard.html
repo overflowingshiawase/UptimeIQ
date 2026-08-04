@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>自動化監控面板 | UptimeIQ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #10141a; --surface: #1a2028; --surface-2: #212934; --line: #2a323d;
+    --text: #e7ebf0; --text-dim: #8b96a5; --accent: #2dd4bf; --warn: #f5a623; --crit: #ef5350;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; }
+  header { padding: 28px 40px 20px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: baseline; }
+  .wordmark { font-family: 'IBM Plex Mono', monospace; font-size: 20px; font-weight: 600; letter-spacing: 0.02em; }
+  .wordmark span { color: var(--accent); }
+  .subtitle { font-size: 13px; color: var(--text-dim); margin-top: 4px; }
+  .topnav { display: flex; align-items: center; gap: 20px; font-size: 13px; }
+  .topnav a { color: var(--text-dim); text-decoration: none; }
+  .topnav a.active { color: var(--accent); }
+  .topnav a:hover { color: var(--text); }
+  #userTag { color: var(--text-dim); font-family: 'IBM Plex Mono', monospace; font-size: 12px; border-left: 1px solid var(--line); padding-left: 20px; }
+  main { padding: 32px 40px; }
+  .toolbar { display: flex; gap: 12px; margin-bottom: 24px; align-items: center; }
+  button { background: var(--accent); color: #0a1210; border: none; padding: 9px 16px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; }
+  .section-title { font-size: 15px; font-weight: 600; margin: 32px 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 18px; }
+  .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .machine-name { font-weight: 600; font-size: 14px; }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-family: 'IBM Plex Mono', monospace; border: 1px solid var(--line); }
+  .badge-high { background: rgba(239,83,80,0.12); color: var(--crit); border-color: rgba(239,83,80,0.3); }
+  .badge-ok { background: rgba(45,212,191,0.12); color: var(--accent); border-color: rgba(45,212,191,0.3); }
+  .diagnosis { font-size: 13px; color: var(--text-dim); line-height: 1.6; margin-top: 8px; }
+  .meta { font-size: 12px; color: var(--text-dim); margin-top: 10px; font-family: 'IBM Plex Mono', monospace; }
+  .empty, .loading, .error { padding: 40px 0; text-align: center; color: var(--text-dim); font-size: 14px; }
+  .error { color: var(--crit); }
+  .flag { color: var(--crit); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="wordmark">Uptime<span>IQ</span></div>
+    <div class="subtitle">預防性保養與妥善率智慧平台</div>
+  </div>
+  <nav class="topnav">
+    <a href="machines.html">設備清單</a>
+    <a href="maintenance-form.html">填寫紀錄</a>
+    <a href="pm-schedule.html">保養排程</a>
+    <a href="analytics.html" id="navAnalytics">績效分析</a>
+    <a href="automation-dashboard.html" class="active">自動化監控</a>
+    <a href="product-overview.html">產品定位</a>
+    <span id="userTag"></span>
+    <a href="#" id="logoutLink">登出</a>
+  </nav>
+</header>
+
+<main>
+  <div class="toolbar">
+    <button onclick="loadAll()">重新整理</button>
+  </div>
+
+  <div class="section-title">異常診斷紀錄（n8n-01：異常自動診斷與推播）</div>
+  <div id="alertGrid" class="grid"><div class="loading">載入中…</div></div>
+
+  <div class="section-title">班別交接紀錄（n8n-02：交接自動結構化）</div>
+  <div id="handoverGrid" class="grid"><div class="loading">載入中…</div></div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabaseClient.js"></script>
+<script>
+  async function requireLogin() {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) {
+      window.location.href = 'index.html';
+      return null;
+    }
+    return session;
+  }
+
+  document.getElementById('logoutLink').addEventListener('click', async (e) => {
+    e.preventDefault();
+    await supabaseClient.auth.signOut();
+    sessionStorage.clear();
+    window.location.href = 'index.html';
+  });
+
+  async function loadAlerts() {
+    const grid = document.getElementById('alertGrid');
+    const { data, error } = await supabaseClient
+      .from('anomaly_alert')
+      .select('*, machine_master(machine_name)')
+      .order('triggered_at', { ascending: false })
+      .limit(10);
+
+    if (error) {
+      grid.innerHTML = `<div class="error">讀取失敗：${error.message}</div>`;
+      return;
+    }
+    if (!data || data.length === 0) {
+      grid.innerHTML = '<div class="empty">目前沒有異常紀錄</div>';
+      return;
+    }
+
+    grid.innerHTML = data.map(item => `
+      <div class="card">
+        <div class="card-header">
+          <span class="machine-name">${item.machine_master?.machine_name || '機台#' + item.machine_id}</span>
+          <span class="badge ${item.risk_score >= 0.5 ? 'badge-high' : 'badge-ok'}">風險 ${item.risk_score}</span>
+        </div>
+        <div class="diagnosis">${item.diagnosis_text || '（尚未生成診斷）'}</div>
+        <div class="meta">狀態：${item.status} ｜ 距上次保養 ${item.days_since_last_pm} 天</div>
+      </div>
+    `).join('');
+  }
+
+  async function loadHandovers() {
+    const grid = document.getElementById('handoverGrid');
+    const { data, error } = await supabaseClient
+      .from('shift_handover')
+      .select('*, machine_master(machine_name)')
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    if (error) {
+      grid.innerHTML = `<div class="error">讀取失敗：${error.message}</div>`;
+      return;
+    }
+    if (!data || data.length === 0) {
+      grid.innerHTML = '<div class="empty">目前沒有交接紀錄</div>';
+      return;
+    }
+
+    grid.innerHTML = data.map(item => `
+      <div class="card">
+        <div class="card-header">
+          <span class="machine-name">${item.machine_master?.machine_name || '機台#' + item.machine_id} · ${item.shift_type}</span>
+          <span class="badge ${item.flagged_incomplete ? 'badge-high' : 'badge-ok'}">完整度 ${item.completeness_score}</span>
+        </div>
+        <div class="diagnosis">原始輸入：${item.raw_input || '（無）'}</div>
+        <div class="diagnosis">${item.structured_json ? JSON.stringify(item.structured_json).replace(/[{}"]/g, '').replace(/,/g, ' ｜ ') : ''}</div>
+        ${item.flagged_incomplete ? '<div class="meta flag">⚠ 交接內容不完整</div>' : ''}
+      </div>
+    `).join('');
+  }
+
+  function loadAll() {
+    loadAlerts();
+    loadHandovers();
+  }
+
+  (async () => {
+    const session = await requireLogin();
+    if (!session) return;
+    document.getElementById('userTag').textContent = sessionStorage.getItem('uptimeiq_name') || session.user.email;
+    loadAll();
+  })();
+</script>
+
+</body>
+</html>

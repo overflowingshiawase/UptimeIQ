@@ -51,7 +51,7 @@ async function submitHandover() {
   };
 
   try {
-    const res = await fetch('https://overflowingshiawsae.app.n8n.cloud/webhook/shift-handover', {
+    const res = await fetch('http://localhost:5678/webhook/shift-handover', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
