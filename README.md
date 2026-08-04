@@ -1,6 +1,9 @@
 # UptimeIQ｜預防性保養與妥善率智慧平台
 
 一套以資料驅動保養排程與設備績效分析為核心的智慧平台，協助製造業降低非預期停機、提升設備妥善率。升級版本進一步整合n8n自動化流程與LLM，將系統從被動式儀表板轉變為會主動診斷、主動整理紀錄的維運助手。
+## 這個專案在解決什麼問題
+
+中小型製造業很多還在用紙本或LINE群組做設備保養判斷和班別交接，這些依賴的是老師傅的經驗和記憶，沒辦法規模化也沒辦法留下紀錄。我用自己在產線上驗證過的規則，加上n8n自動化和LLM輔助，做了一個輕量級工具，把這兩件事變成自動判斷、自動整理、有紀錄可查的流程。這不是要取代企業既有系統，是給還沒有預算導入完整CMMS的工廠一個補強層。
 
 **Demo網址**：`（部署到Netlify後，把網址貼在這裡）`
 
@@ -68,7 +71,8 @@
 ## 需求文件
 
 完整BRD需求規格書與資料庫設計，見 [`docs/UptimeIQ_需求文件與資料庫設計.md`](./docs/UptimeIQ_需求文件與資料庫設計.md)。
-
+商業論證與情境故事，見 [`docs/why_build.md`](./docs/why_build.md)。
+已知限制與未來改善方向，見 [`docs/known_limitations.md`](./docs/known_limitations.md)。
 升級版本的問題定義、邏輯規則、Future Work，見：
 - [`docs/problem_definition.md`](./docs/problem_definition.md)
 - [`docs/logic_rules.md`](./docs/logic_rules.md)
