@@ -46,6 +46,7 @@
 - 前端：HTML / CSS / JavaScript（無框架）
 - 後端／資料庫：Supabase（PostgreSQL + Auth + Row Level Security）
 - 自動化流程：n8n（工作流編排）
+- n8n workflow匯出檔：[`n8n-workflows/`](./n8n-workflows)（含完整節點結構與Prompt設計，供稽核參考）
 - AI輔助：Google Gemini API（診斷文字生成、交接內容結構化）
 - 推播通知：Discord Webhook
 - 部署：Netlify（接GitHub自動部署）
@@ -60,6 +61,7 @@
 | `pm-schedule.html` | 動態保養排程（BRD-01核心邏輯） |
 | `analytics.html` | 績效分析儀表板（BRD-02，含情境模擬與單一設備深潛，僅admin可見） |
 | `handover.html` | 班別交接輸入表單（n8n-02觸發入口） |
+| `automation-dashboard.html` | 自動化監控面板，即時顯示n8n-01/n8n-02處理結果 |
 | `product-overview.html` | 產品定位與Roadmap說明 |
 
 ## 邏輯與資料來源聲明
