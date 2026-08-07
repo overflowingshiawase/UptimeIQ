@@ -72,13 +72,15 @@
 
 ## 需求文件
 
-完整BRD需求規格書與資料庫設計，見 [`docs/UptimeIQ_需求文件與資料庫設計.md`](./docs/UptimeIQ_需求文件與資料庫設計.md)。
-商業論證與情境故事，見 [`docs/why_build.md`](./docs/why_build.md)。
-已知限制與未來改善方向，見 [`docs/known_limitations.md`](./docs/known_limitations.md)。
+完整BRD需求規格書與資料庫設計，見 [`docs/UptimeIQ_需求文件與資料庫設計.md`](https://github.com/overflowingshiawase/UptimeIQ/blob/main/docs/UptimeIQ_%E9%9C%80%E6%B1%82%E6%96%87%E4%BB%B6%E8%88%87%E8%B3%87%E6%96%99%E5%BA%AB%E8%A8%AD%E8%A8%88.md)。
+商業論證與情境故事，見 [`docs/why_build.md`](https://github.com/overflowingshiawase/UptimeIQ/blob/main/docs/why_build.md)。
+已知限制與未來改善方向，見 [`docs/known_limitations.md`](https://github.com/overflowingshiawase/UptimeIQ/blob/main/docs/known_limitations.md)。
+技術決策記錄（各項架構選擇的取捨分析與替代方案比較），見 [`docs/UptimeIQ_技術決策記錄_ADR.md`](https://github.com/overflowingshiawase/UptimeIQ/blob/main/docs/UptimeIQ_%E6%8A%80%E8%A1%93%E6%B1%BA%E7%AD%96%E8%A8%98%E9%8C%84_ADR.md)。
 升級版本的問題定義、邏輯規則、Future Work，見：
-- [`docs/problem_definition.md`](./docs/problem_definition.md)
-- [`docs/logic_rules.md`](./docs/logic_rules.md)
-- [`docs/future_work.md`](./docs/future_work.md)
+
+- [`docs/problem_definition.md`](https://github.com/overflowingshiawase/UptimeIQ/blob/main/docs/problem_definition.md)
+- [`docs/logic_rules.md`](https://github.com/overflowingshiawase/UptimeIQ/blob/main/docs/logic_rules.md)
+- [`docs/future_work.md`](https://github.com/overflowingshiawase/UptimeIQ/blob/main/docs/future_work.md)
 
 ## 設計取捨說明
 
